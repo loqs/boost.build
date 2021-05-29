@@ -1,0 +1,38 @@
+pkgname=('boost.build')
+_pkgname=build
+pkgver=4.4.1
+pkgrel=0.1
+pkgdesc='Free peer-reviewed portable C++ source libraries'
+url='https://www.boost.org/'
+arch=('x86_64')
+license=('custom')
+depends=('gcc-libs')
+conflicts=('boost<1.76')
+source=($pkgname-$pkgver.tar.gz::https://github.com/boostorg/build/archive/refs/tags/$pkgver.tar.gz
+         boost.build-reorder-linker-options.patch)
+sha256sums=('31a243b1eb26638500977a8386e56d44f86c18db70cf0a5dcdd2d7391afc1a61'
+            '49e7f56ae2003db87e341639463a89f0c7593739797088e595e23b10b8419793')
+b2sums=('8531d065c7fba889cdf95544b713c0044e7f6c46346341c43c4a9e7732b7994ac908cfb75054bc22da6f36a1e7f6d998aad4bd59b99ee3e1b0d9a6e138fc24b7'
+        '41c7de791490bfb6ba44c27efebf1492c3ea68d7bf705627b8628d87faa1827826a173f6816d64c99bc23d1b46b0fdb13832cdc9aae5b1fa88654f6b830cc8c4')
+
+prepare() {
+   cd $_pkgname-$pkgver
+   patch -p1 -i ../boost.build-reorder-linker-options.patch
+}
+
+build() {
+   export _stagedir="${srcdir}/stagedir"
+
+   cd $_pkgname-$pkgver
+
+   ./bootstrap.sh --cxxflags="${CPPFLAGS} ${CXXFLAGS} -std=c++17 -fPIC -O3 ${LDFLAGS}"
+   ./b2 variant=release --prefix=$_stagedir/usr install
+}
+
+package() {
+   cp --no-preserve=ownership -r $_stagedir/* "$pkgdir"
+   install -Dm644 $_pkgname-$pkgver/LICENSE.txt \
+      "${pkgdir}"/usr/share/licenses/$pkgname/LICENSE_1_0.txt
+}
+
+# vim: ts=2 sw=2 et:
